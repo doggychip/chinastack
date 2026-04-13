@@ -9,21 +9,33 @@ export function TechDetailPage() {
   const [tech, setTech] = useState<TechnologyItem | null>(null);
   const [sites, setSites] = useState<SiteListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
+    setError(null);
     Promise.all([api.getTechnology(slug), api.getTechnologySites(slug)])
       .then(([t, s]) => {
         setTech(t);
         setSites(s);
       })
-      .catch(() => {})
+      .catch((e) => setError(e.message || "Failed to load technology"))
       .finally(() => setLoading(false));
   }, [slug]);
 
   if (loading) {
     return <div className="text-center py-12 text-slate-500">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-600 bg-red-50 border border-red-200 rounded-lg p-4 max-w-md mx-auto">
+          {error}
+        </div>
+      </div>
+    );
   }
 
   if (!tech) {

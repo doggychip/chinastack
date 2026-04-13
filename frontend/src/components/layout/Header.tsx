@@ -4,11 +4,17 @@ export function Header() {
   const location = useLocation();
 
   const links = [
-    { to: "/", label: "Search" },
+    { to: "/", label: "Search", exact: true },
     { to: "/sites", label: "Sites" },
     { to: "/technologies", label: "Technologies" },
     { to: "/stats", label: "Stats" },
   ];
+
+  const isActive = (link: typeof links[number]) => {
+    if (link.exact) return location.pathname === link.to;
+    if (link.to === "/sites") return location.pathname.startsWith("/site");
+    return location.pathname.startsWith(link.to);
+  };
 
   return (
     <header className="bg-[#0F172A] text-white">
@@ -27,7 +33,7 @@ export function Header() {
               key={l.to}
               to={l.to}
               className={`px-3 py-1.5 rounded text-sm transition-colors ${
-                location.pathname === l.to
+                isActive(l)
                   ? "bg-white/10 text-white"
                   : "text-slate-300 hover:text-white hover:bg-white/5"
               }`}

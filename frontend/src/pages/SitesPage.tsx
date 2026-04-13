@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import type { SiteListItem } from "../types";
@@ -6,17 +6,26 @@ import type { SiteListItem } from "../types";
 export function SitesPage() {
   const [sites, setSites] = useState<SiteListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [sort, setSort] = useState("tech_count");
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    debounceTimer.current = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(debounceTimer.current);
+  }, [query]);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     api
-      .listSites({ per_page: 100, q: query || undefined, sort })
+      .listSites({ per_page: 100, q: debouncedQuery || undefined, sort })
       .then(setSites)
-      .catch(() => {})
+      .catch((e) => setError(e.message || "Failed to load sites"))
       .finally(() => setLoading(false));
-  }, [query, sort]);
+  }, [debouncedQuery, sort]);
 
   return (
     <div>
@@ -40,6 +49,12 @@ export function SitesPage() {
           <option value="domain">A-Z</option>
         </select>
       </div>
+
+      {error && (
+        <div className="mb-4 text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 text-sm">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-12 text-slate-500">Loading...</div>
@@ -73,7 +88,7 @@ export function SitesPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-slate-500 truncate max-w-[200px] hidden sm:table-cell">
-                    {s.title || "—"}
+                    {s.title || "\u2014"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-medium">
@@ -81,14 +96,14 @@ export function SitesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right text-slate-400 hidden md:table-cell">
-                    {s.status_code || "—"}
+                    {s.status_code || "\u2014"}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          {sites.length === 0 && (
+          {sites.length === 0 && !error && (
             <div className="p-8 text-center text-slate-500">
               No sites found. Scan some domains first!
             </div>

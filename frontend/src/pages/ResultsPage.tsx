@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api/client";
 import type { SiteResult } from "../types";
@@ -11,7 +11,7 @@ export function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!domain) return;
     setLoading(true);
     setError(null);
@@ -19,7 +19,6 @@ export function ResultsPage() {
       const res = await api.getCachedLookup(domain);
       setResult(res);
     } catch {
-      // Not cached, do a fresh scan
       try {
         const res = await api.lookup(domain);
         setResult(res);
@@ -29,11 +28,11 @@ export function ResultsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [domain]);
 
   useEffect(() => {
     load();
-  }, [domain]);
+  }, [load]);
 
   const handleRescan = async () => {
     if (!domain) return;

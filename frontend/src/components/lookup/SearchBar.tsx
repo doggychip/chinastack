@@ -2,12 +2,18 @@ import { useState } from "react";
 
 interface Props {
   onSearch: (url: string) => void;
+  onInputChange?: () => void;
   loading?: boolean;
   size?: "large" | "normal";
 }
 
-export function SearchBar({ onSearch, loading, size = "normal" }: Props) {
+export function SearchBar({ onSearch, onInputChange, loading, size = "normal" }: Props) {
   const [value, setValue] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+    onInputChange?.();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +34,7 @@ export function SearchBar({ onSearch, loading, size = "normal" }: Props) {
         <input
           type="text"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={handleChange}
           placeholder="输入网址查看技术栈 — e.g. taobao.com"
           className={`flex-1 bg-transparent outline-none px-4 text-slate-800 placeholder:text-slate-400 ${
             isLarge ? "text-lg" : "text-sm"

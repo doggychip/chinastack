@@ -7,7 +7,7 @@ async function fetchJSON<T>(path: string, options?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`${res.status}: ${body}`);
+    throw new Error(body ? `${res.status}: ${body}` : `${res.status} ${res.statusText || "Request failed"}`);
   }
   return res.json();
 }

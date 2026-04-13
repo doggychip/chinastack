@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import type { TechnologyItem } from "../types";
@@ -8,20 +8,29 @@ export function TechnologiesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [techs, setTechs] = useState<TechnologyItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const selectedCategory = searchParams.get("category") || "";
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    debounceTimer.current = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(debounceTimer.current);
+  }, [query]);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     api
       .listTechnologies({
         category: selectedCategory || undefined,
-        q: query || undefined,
+        q: debouncedQuery || undefined,
       })
       .then(setTechs)
-      .catch(() => {})
+      .catch((e) => setError(e.message || "Failed to load technologies"))
       .finally(() => setLoading(false));
-  }, [selectedCategory, query]);
+  }, [selectedCategory, debouncedQuery]);
 
   const categoryKeys = Object.keys(CATEGORIES);
 
@@ -69,6 +78,12 @@ export function TechnologiesPage() {
         className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm mb-4 outline-none focus:ring-2 focus:ring-blue-500"
       />
 
+      {error && (
+        <div className="mb-4 text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 text-sm">
+          {error}
+        </div>
+      )}
+
       {loading ? (
         <div className="text-center py-12 text-slate-500">Loading...</div>
       ) : (
@@ -114,7 +129,7 @@ export function TechnologiesPage() {
         </div>
       )}
 
-      {!loading && techs.length === 0 && (
+      {!loading && !error && techs.length === 0 && (
         <div className="text-center py-12 text-slate-500">
           No technologies found.
         </div>

@@ -46,7 +46,7 @@ export function HomePage() {
             </p>
           </div>
 
-          <SearchBar onSearch={handleSearch} loading={loading} size="large" />
+          <SearchBar onSearch={handleSearch} onInputChange={() => setError(null)} loading={loading} size="large" />
 
           {error && (
             <div className="mt-4 text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 text-sm">
