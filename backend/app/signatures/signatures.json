@@ -222,10 +222,11 @@
       "website": "https://react.dev",
       "description": "React JavaScript library for building UIs",
       "detectors": [
-        {"type": "html", "pattern": "react\\.development\\.js"},
-        {"type": "html", "pattern": "react-dom"},
-        {"type": "script_src", "pattern": "react"},
-        {"type": "html", "pattern": "data-reactroot"}
+        {"type": "html", "pattern": "react\\.(?:development|production)(?:\\.min)?\\.js"},
+        {"type": "html", "pattern": "react-dom(?:\\.min|\\.production)?\\.js"},
+        {"type": "script_src", "pattern": "react(?:-dom)?(?:\\.production|\\.development)?(?:\\.min)?\\.js"},
+        {"type": "html", "pattern": "data-react(?:root|id)"},
+        {"type": "html", "pattern": "_reactRootContainer"}
       ]
     },
     {
@@ -235,10 +236,11 @@
       "website": "https://vuejs.org",
       "description": "Vue.js progressive JavaScript framework",
       "detectors": [
-        {"type": "html", "pattern": "vue\\.min\\.js"},
-        {"type": "html", "pattern": "vue\\.runtime"},
-        {"type": "script_src", "pattern": "vue(?:\\.min)?\\.js"},
-        {"type": "html", "pattern": "data-v-[a-f0-9]"}
+        {"type": "html", "pattern": "vue(?:\\.runtime)?(?:\\.global)?(?:\\.prod)?(?:\\.min)?\\.js"},
+        {"type": "script_src", "pattern": "vue(?:\\.runtime)?(?:\\.global)?(?:\\.prod)?(?:\\.min)?\\.js"},
+        {"type": "html", "pattern": "data-v-[a-f0-9]{6,}"},
+        {"type": "html", "pattern": "id=\"app\"[^>]*>\\s*<!--"},
+        {"type": "html", "pattern": "__vue_app__"}
       ]
     },
     {
@@ -260,8 +262,9 @@
       "website": "https://jquery.com",
       "description": "jQuery JavaScript library",
       "detectors": [
-        {"type": "script_src", "pattern": "jquery[\\.\\-](?:min\\.)?js"},
-        {"type": "html", "pattern": "jquery[\\.\\-](?:min\\.)?js"}
+        {"type": "script_src", "pattern": "jquery[\\-./]"},
+        {"type": "html", "pattern": "jquery[\\-.]\\d+(?:\\.\\d+)*(?:\\.min)?\\.js"},
+        {"type": "html", "pattern": "jquery(?:\\.min)?\\.js"}
       ]
     },
     {
@@ -935,6 +938,542 @@
         {"type": "html", "pattern": "sendcloud\\.net"},
         {"type": "script_src", "pattern": "sendcloud\\.net"}
       ]
+    },
+    {
+      "name": "JD CDN",
+      "slug": "jd-cdn",
+      "category": "cdn",
+      "website": "https://www.jd.com",
+      "description": "京东CDN (360buyimg)",
+      "detectors": [
+        {"type": "html", "pattern": "360buyimg\\.com"},
+        {"type": "script_src", "pattern": "360buyimg\\.com"}
+      ]
+    },
+    {
+      "name": "Taobao CDN",
+      "slug": "taobao-cdn",
+      "category": "cdn",
+      "website": "https://www.taobao.com",
+      "description": "淘宝CDN (alicdn/tbcdn)",
+      "detectors": [
+        {"type": "html", "pattern": "(?:g\\.alicdn|tbcdn)\\.com"},
+        {"type": "script_src", "pattern": "(?:g\\.alicdn|tbcdn)\\.com"}
+      ]
+    },
+    {
+      "name": "HSTS",
+      "slug": "hsts",
+      "category": "security",
+      "website": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security",
+      "description": "HTTP Strict Transport Security",
+      "detectors": [
+        {"type": "header", "pattern": "strict-transport-security"}
+      ]
+    },
+    {
+      "name": "Content Security Policy",
+      "slug": "csp",
+      "category": "security",
+      "website": "https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP",
+      "description": "Content Security Policy header",
+      "detectors": [
+        {"type": "header", "pattern": "content-security-policy"}
+      ]
+    },
+    {
+      "name": "X-Frame-Options",
+      "slug": "x-frame-options",
+      "category": "security",
+      "website": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options",
+      "description": "Clickjacking protection header",
+      "detectors": [
+        {"type": "header", "pattern": "x-frame-options"}
+      ]
+    },
+    {
+      "name": "HTTP/3 QUIC",
+      "slug": "http3-quic",
+      "category": "server",
+      "website": "https://quicwg.org/",
+      "description": "HTTP/3 with QUIC protocol support",
+      "detectors": [
+        {"type": "header", "pattern": "alt-svc.*h3"}
+      ]
+    },
+    {
+      "name": "Swiper",
+      "slug": "swiper",
+      "category": "javascript",
+      "website": "https://swiperjs.com",
+      "description": "Swiper touch slider",
+      "detectors": [
+        {"type": "html", "pattern": "swiper(?:-bundle)?(?:\\.min)?\\.(?:js|css)"},
+        {"type": "html", "pattern": "swiper-(?:container|wrapper|slide)"}
+      ]
+    },
+    {
+      "name": "Layui",
+      "slug": "layui",
+      "category": "ui",
+      "website": "https://layui.dev",
+      "description": "Layui前端UI框架",
+      "detectors": [
+        {"type": "html", "pattern": "layui(?:\\.all)?(?:\\.min)?\\.(?:js|css)"},
+        {"type": "html", "pattern": "layui-"}
+      ]
+    },
+    {
+      "name": "Bootstrap",
+      "slug": "bootstrap",
+      "category": "ui",
+      "website": "https://getbootstrap.com",
+      "description": "Bootstrap CSS framework",
+      "detectors": [
+        {"type": "html", "pattern": "bootstrap(?:\\.min)?\\.(?:js|css)"},
+        {"type": "link_href", "pattern": "bootstrap(?:\\.min)?\\.css"}
+      ]
+    },
+    {
+      "name": "Tailwind CSS",
+      "slug": "tailwindcss",
+      "category": "ui",
+      "website": "https://tailwindcss.com",
+      "description": "Tailwind CSS utility-first framework",
+      "detectors": [
+        {"type": "html", "pattern": "tailwind(?:css)?(?:\\.min)?\\.(?:js|css)"},
+        {"type": "html", "pattern": "class=\"[^\"]*(?:flex|grid|p-\\d|m-\\d|text-\\w+|bg-\\w+|rounded)[^\"]*(?:flex|grid|p-\\d|m-\\d|text-\\w+|bg-\\w+|rounded)"}
+      ]
+    },
+    {
+      "name": "Font Awesome",
+      "slug": "font-awesome",
+      "category": "font",
+      "website": "https://fontawesome.com",
+      "description": "Font Awesome icon library",
+      "detectors": [
+        {"type": "html", "pattern": "font-?awesome"},
+        {"type": "link_href", "pattern": "font-?awesome"},
+        {"type": "html", "pattern": "fa-(?:solid|regular|brands|light|duotone)"}
+      ]
+    },
+    {
+      "name": "iconfont",
+      "slug": "iconfont",
+      "category": "font",
+      "website": "https://www.iconfont.cn",
+      "description": "阿里巴巴矢量图标库",
+      "detectors": [
+        {"type": "html", "pattern": "at\\.alicdn\\.com"},
+        {"type": "link_href", "pattern": "at\\.alicdn\\.com"},
+        {"type": "html", "pattern": "iconfont"}
+      ]
+    },
+    {
+      "name": "LazyLoad",
+      "slug": "lazyload",
+      "category": "javascript",
+      "website": "https://github.com/tuupola/lazyload",
+      "description": "Image lazy loading",
+      "detectors": [
+        {"type": "html", "pattern": "data-(?:src|original|lazy)="},
+        {"type": "html", "pattern": "lazyload|lazy-load"}
+      ]
+    },
+    {
+      "name": "Sentry",
+      "slug": "sentry",
+      "category": "analytics",
+      "website": "https://sentry.io",
+      "description": "Sentry error tracking",
+      "detectors": [
+        {"type": "html", "pattern": "sentry\\.io"},
+        {"type": "script_src", "pattern": "sentry"},
+        {"type": "html", "pattern": "Sentry\\.init"}
+      ]
+    },
+    {
+      "name": "Fundebug",
+      "slug": "fundebug",
+      "category": "analytics",
+      "website": "https://www.fundebug.com",
+      "description": "Fundebug前端异常监控",
+      "detectors": [
+        {"type": "html", "pattern": "fundebug"},
+        {"type": "script_src", "pattern": "fundebug"}
+      ]
+    },
+    {
+      "name": "Webpack",
+      "slug": "webpack",
+      "category": "javascript",
+      "website": "https://webpack.js.org",
+      "description": "Webpack module bundler",
+      "detectors": [
+        {"type": "html", "pattern": "webpackJsonp|webpackChunk"},
+        {"type": "script_src", "pattern": "chunk|vendor.*\\.[a-f0-9]{8,}\\.js"}
+      ]
+    },
+    {
+      "name": "Vite",
+      "slug": "vite",
+      "category": "javascript",
+      "website": "https://vite.dev",
+      "description": "Vite build tool",
+      "detectors": [
+        {"type": "html", "pattern": "@vite/client"},
+        {"type": "html", "pattern": "modulepreload"},
+        {"type": "script_src", "pattern": "/@vite/"}
+      ]
+    },
+    {
+      "name": "TypeScript",
+      "slug": "typescript",
+      "category": "javascript",
+      "website": "https://www.typescriptlang.org",
+      "description": "TypeScript compiled output",
+      "detectors": [
+        {"type": "html", "pattern": "\\.tsx?\""},
+        {"type": "script_src", "pattern": "\\.ts\""}
+      ]
+    },
+    {
+      "name": "Qiniu CDN",
+      "slug": "qiniu-cdn",
+      "category": "cdn",
+      "website": "https://www.qiniu.com",
+      "description": "七牛云CDN",
+      "detectors": [
+        {"type": "html", "pattern": "qnssl\\.com|clouddn\\.com|qiniucdn\\.com|qbox\\.me"},
+        {"type": "script_src", "pattern": "qnssl\\.com|clouddn\\.com|qiniucdn\\.com"}
+      ]
+    },
+    {
+      "name": "Upyun CDN",
+      "slug": "upyun-cdn",
+      "category": "cdn",
+      "website": "https://www.upyun.com",
+      "description": "又拍云CDN",
+      "detectors": [
+        {"type": "header", "pattern": "x-upyun|via.*upyun"},
+        {"type": "html", "pattern": "upaiyun\\.com|upyun\\.com"}
+      ]
+    },
+    {
+      "name": "Polyfill.io",
+      "slug": "polyfill-io",
+      "category": "javascript",
+      "website": "https://polyfill.io",
+      "description": "Polyfill.io browser polyfills",
+      "detectors": [
+        {"type": "html", "pattern": "polyfill\\.io"},
+        {"type": "script_src", "pattern": "polyfill(?:\\.min)?\\.js"}
+      ]
+    },
+    {
+      "name": "SWC",
+      "slug": "swc",
+      "category": "javascript",
+      "website": "https://swc.rs",
+      "description": "SWC Rust-based compiler",
+      "detectors": [
+        {"type": "html", "pattern": "swcMinify|_swc_"}
+      ]
+    },
+    {
+      "name": "Google Verification",
+      "slug": "google-verification",
+      "category": "analytics",
+      "website": "https://search.google.com/search-console",
+      "description": "Google Search Console site verification",
+      "detectors": [
+        {"type": "meta", "pattern": "google-site-verification"}
+      ]
+    },
+    {
+      "name": "Baidu Verification",
+      "slug": "baidu-verification",
+      "category": "analytics",
+      "website": "https://ziyuan.baidu.com",
+      "description": "百度站长平台验证",
+      "detectors": [
+        {"type": "meta", "pattern": "baidu-site-verification"},
+        {"type": "html", "pattern": "baidu-site-verification"}
+      ]
+    },
+    {
+      "name": "Bing Verification",
+      "slug": "bing-verification",
+      "category": "analytics",
+      "website": "https://www.bing.com/webmasters",
+      "description": "Bing Webmaster Tools verification",
+      "detectors": [
+        {"type": "meta", "pattern": "msvalidate\\.01"}
+      ]
+    },
+    {
+      "name": "Open Graph",
+      "slug": "open-graph",
+      "category": "social",
+      "website": "https://ogp.me/",
+      "description": "Open Graph meta protocol for social sharing",
+      "detectors": [
+        {"type": "meta", "pattern": "og:(?:title|description|image|url)"}
+      ]
+    },
+    {
+      "name": "Twitter Cards",
+      "slug": "twitter-cards",
+      "category": "social",
+      "website": "https://developer.twitter.com/en/docs/twitter-for-websites/cards",
+      "description": "Twitter Card meta tags",
+      "detectors": [
+        {"type": "meta", "pattern": "twitter:(?:card|title|description|image)"}
+      ]
+    },
+    {
+      "name": "WeChat Mini Program",
+      "slug": "wechat-miniprogram",
+      "category": "miniprogram",
+      "website": "https://developers.weixin.qq.com/miniprogram",
+      "description": "微信小程序跳转/引导",
+      "detectors": [
+        {"type": "html", "pattern": "weixin://dl/business"},
+        {"type": "html", "pattern": "wx\\.miniProgram"},
+        {"type": "meta", "pattern": "wechat-miniprogram"}
+      ]
+    },
+    {
+      "name": "Spring Boot",
+      "slug": "spring-boot",
+      "category": "framework_be",
+      "website": "https://spring.io/projects/spring-boot",
+      "description": "Spring Boot Java framework",
+      "detectors": [
+        {"type": "header", "pattern": "x-application-context"},
+        {"type": "cookie", "pattern": "JSESSIONID"},
+        {"type": "html", "pattern": "whitelabel.*error|spring"}
+      ]
+    },
+    {
+      "name": "Django",
+      "slug": "django",
+      "category": "framework_be",
+      "website": "https://www.djangoproject.com",
+      "description": "Django Python web framework",
+      "detectors": [
+        {"type": "cookie", "pattern": "csrftoken"},
+        {"type": "html", "pattern": "csrfmiddlewaretoken"},
+        {"type": "header", "pattern": "x-frame-options:\\s*(?:DENY|SAMEORIGIN)"}
+      ]
+    },
+    {
+      "name": "Express.js",
+      "slug": "expressjs",
+      "category": "framework_be",
+      "website": "https://expressjs.com",
+      "description": "Express.js Node.js web framework",
+      "detectors": [
+        {"type": "header", "pattern": "x-powered-by:\\s*Express"}
+      ]
+    },
+    {
+      "name": "PHP",
+      "slug": "php",
+      "category": "framework_be",
+      "website": "https://www.php.net",
+      "description": "PHP server-side language",
+      "detectors": [
+        {"type": "header", "pattern": "x-powered-by:\\s*PHP"},
+        {"type": "cookie", "pattern": "PHPSESSID"},
+        {"type": "html", "pattern": "\\.php(?:\\?|\"|\\'|\\s)"}
+      ]
+    },
+    {
+      "name": "ASP.NET",
+      "slug": "aspnet",
+      "category": "framework_be",
+      "website": "https://dotnet.microsoft.com/en-us/apps/aspnet",
+      "description": "ASP.NET web framework",
+      "detectors": [
+        {"type": "header", "pattern": "x-powered-by:\\s*ASP\\.NET"},
+        {"type": "header", "pattern": "x-aspnet-version"},
+        {"type": "cookie", "pattern": "ASP\\.NET_SessionId|__RequestVerificationToken"}
+      ]
+    },
+    {
+      "name": "IIS",
+      "slug": "iis",
+      "category": "server",
+      "website": "https://www.iis.net",
+      "description": "Microsoft Internet Information Services",
+      "detectors": [
+        {"type": "header", "pattern": "server:\\s*Microsoft-IIS"}
+      ]
+    },
+    {
+      "name": "LiteSpeed",
+      "slug": "litespeed",
+      "category": "server",
+      "website": "https://www.litespeedtech.com",
+      "description": "LiteSpeed Web Server",
+      "detectors": [
+        {"type": "header", "pattern": "server:\\s*LiteSpeed"}
+      ]
+    },
+    {
+      "name": "Hotjar",
+      "slug": "hotjar",
+      "category": "analytics",
+      "website": "https://www.hotjar.com",
+      "description": "Hotjar behavior analytics and feedback",
+      "detectors": [
+        {"type": "html", "pattern": "hotjar\\.com"},
+        {"type": "script_src", "pattern": "hotjar\\.com"}
+      ]
+    },
+    {
+      "name": "Clarity",
+      "slug": "clarity",
+      "category": "analytics",
+      "website": "https://clarity.microsoft.com",
+      "description": "Microsoft Clarity behavior analytics",
+      "detectors": [
+        {"type": "html", "pattern": "clarity\\.ms"},
+        {"type": "script_src", "pattern": "clarity\\.ms"}
+      ]
+    },
+    {
+      "name": "Tencent Captcha",
+      "slug": "tencent-captcha",
+      "category": "security",
+      "website": "https://cloud.tencent.com/product/captcha",
+      "description": "腾讯云验证码",
+      "detectors": [
+        {"type": "html", "pattern": "captcha\\.qq\\.com|t\\.captcha\\.qq\\.com"},
+        {"type": "script_src", "pattern": "captcha\\.qq\\.com"}
+      ]
+    },
+    {
+      "name": "Geetest",
+      "slug": "geetest",
+      "category": "security",
+      "website": "https://www.geetest.com",
+      "description": "极验验证码",
+      "detectors": [
+        {"type": "html", "pattern": "geetest|gt\\.js"},
+        {"type": "script_src", "pattern": "geetest\\.com|gt\\.js"}
+      ]
+    },
+    {
+      "name": "Vaptcha",
+      "slug": "vaptcha",
+      "category": "security",
+      "website": "https://www.vaptcha.com",
+      "description": "Vaptcha手势验证码",
+      "detectors": [
+        {"type": "html", "pattern": "vaptcha"},
+        {"type": "script_src", "pattern": "vaptcha"}
+      ]
+    },
+    {
+      "name": "Zhima CDN",
+      "slug": "zhimg-cdn",
+      "category": "cdn",
+      "website": "https://www.zhihu.com",
+      "description": "知乎CDN (zhimg)",
+      "detectors": [
+        {"type": "html", "pattern": "zhimg\\.com"},
+        {"type": "script_src", "pattern": "zhimg\\.com"}
+      ]
+    },
+    {
+      "name": "NetEase CDN",
+      "slug": "netease-cdn",
+      "category": "cdn",
+      "website": "https://www.163.com",
+      "description": "网易CDN (nosdn/127.net)",
+      "detectors": [
+        {"type": "html", "pattern": "nosdn\\.127\\.net|nos\\.netease\\.com"},
+        {"type": "script_src", "pattern": "nosdn\\.127\\.net|nos\\.netease\\.com"}
+      ]
+    },
+    {
+      "name": "Douban CDN",
+      "slug": "douban-cdn",
+      "category": "cdn",
+      "website": "https://www.douban.com",
+      "description": "豆瓣CDN (doubanio)",
+      "detectors": [
+        {"type": "html", "pattern": "doubanio\\.com"},
+        {"type": "script_src", "pattern": "doubanio\\.com"}
+      ]
+    },
+    {
+      "name": "Sohu CDN",
+      "slug": "sohu-cdn",
+      "category": "cdn",
+      "website": "https://www.sohu.com",
+      "description": "搜狐CDN (sohucs)",
+      "detectors": [
+        {"type": "html", "pattern": "sohucs\\.com|chang\\.sohu\\.com"},
+        {"type": "script_src", "pattern": "sohucs\\.com"}
+      ]
+    },
+    {
+      "name": "Sina CDN",
+      "slug": "sina-cdn",
+      "category": "cdn",
+      "website": "https://www.sina.com",
+      "description": "新浪CDN (sinaimg)",
+      "detectors": [
+        {"type": "html", "pattern": "sinaimg\\.cn|miaopai\\.com"},
+        {"type": "script_src", "pattern": "sinaimg\\.cn"}
+      ]
+    },
+    {
+      "name": "Tencent Cloud WAF",
+      "slug": "tencent-waf",
+      "category": "security",
+      "website": "https://cloud.tencent.com/product/waf",
+      "description": "腾讯云Web应用防火墙",
+      "detectors": [
+        {"type": "cookie", "pattern": "TC-V-Wetest|tgw_l7_route"}
+      ]
+    },
+    {
+      "name": "Baidu Webmaster",
+      "slug": "baidu-webmaster",
+      "category": "analytics",
+      "website": "https://ziyuan.baidu.com",
+      "description": "百度资源平台自动推送",
+      "detectors": [
+        {"type": "html", "pattern": "zz\\.bdstatic\\.com/linksubmit|push\\.js"},
+        {"type": "script_src", "pattern": "zz\\.bdstatic\\.com"}
+      ]
+    },
+    {
+      "name": "Tawk.to",
+      "slug": "tawk-to",
+      "category": "customer_service",
+      "website": "https://www.tawk.to",
+      "description": "Tawk.to live chat",
+      "detectors": [
+        {"type": "html", "pattern": "tawk\\.to"},
+        {"type": "script_src", "pattern": "tawk\\.to"}
+      ]
+    },
+    {
+      "name": "Drift",
+      "slug": "drift",
+      "category": "customer_service",
+      "website": "https://www.drift.com",
+      "description": "Drift conversational marketing",
+      "detectors": [
+        {"type": "html", "pattern": "drift\\.com"},
+        {"type": "script_src", "pattern": "drift\\.com|driftt\\.com"}
+      ]
     }
   ]
 }
+
