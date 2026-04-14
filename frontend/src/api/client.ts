@@ -72,4 +72,18 @@ export const api = {
   getCategoryStats(category: string) {
     return fetchJSON<CategoryDetail>(`/api/stats/category/${category}`);
   },
+
+  exportSitesUrl(params?: { tech?: string; category?: string; q?: string }) {
+    const sp = new URLSearchParams();
+    if (params?.tech) sp.set("tech", params.tech);
+    if (params?.category) sp.set("category", params.category);
+    if (params?.q) sp.set("q", params.q);
+    return `${API_BASE}/api/export/sites?${sp}`;
+  },
+
+  exportTechnologiesUrl(category?: string) {
+    const sp = new URLSearchParams();
+    if (category) sp.set("category", category);
+    return `${API_BASE}/api/export/technologies?${sp}`;
+  },
 };

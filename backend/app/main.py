@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db
 from app.seed import seed_technologies, seed_sites
-from app.routers import lookup, sites, technologies, stats
+from app.routers import lookup, sites, technologies, stats, export
 
 logging.basicConfig(
     level=logging.INFO,
@@ -55,6 +55,7 @@ app.include_router(lookup.router)
 app.include_router(sites.router)
 app.include_router(technologies.router)
 app.include_router(stats.router)
+app.include_router(export.router)
 
 
 @app.get("/api/health")

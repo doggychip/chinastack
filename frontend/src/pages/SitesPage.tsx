@@ -29,7 +29,15 @@ export function SitesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-4">Scanned Sites</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold text-slate-800">Scanned Sites</h1>
+        <a
+          href={api.exportSitesUrl({ q: debouncedQuery || undefined })}
+          className="text-sm text-blue-600 border border-blue-200 px-3 py-1.5 rounded hover:bg-blue-50 transition-colors"
+        >
+          Export CSV
+        </a>
+      </div>
 
       <div className="flex gap-3 mb-4">
         <input

@@ -88,9 +88,17 @@ export function TechDetailPage() {
         )}
       </div>
 
-      <h2 className="text-lg font-semibold text-slate-800 mb-3">
-        Sites using {tech.name}
-      </h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-slate-800">
+          Sites using {tech.name}
+        </h2>
+        <a
+          href={api.exportSitesUrl({ tech: tech.slug })}
+          className="text-sm text-blue-600 border border-blue-200 px-3 py-1.5 rounded hover:bg-blue-50 transition-colors"
+        >
+          Export CSV
+        </a>
+      </div>
 
       <div className="bg-white rounded-lg border border-slate-200">
         {sites.map((s) => (
