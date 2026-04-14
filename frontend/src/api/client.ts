@@ -33,6 +33,10 @@ export const api = {
     return fetchJSON<SiteResult>(`/api/lookup/${encodeURIComponent(domain)}`);
   },
 
+  recentSites(limit = 10) {
+    return fetchJSON<SiteListItem[]>(`/api/sites/recent?limit=${limit}`);
+  },
+
   listSites(params?: { page?: number; per_page?: number; q?: string; sort?: string }) {
     const sp = new URLSearchParams();
     if (params?.page) sp.set("page", String(params.page));

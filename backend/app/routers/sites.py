@@ -40,6 +40,22 @@ async def list_sites(
     return [SiteOut.model_validate(s) for s in result.scalars().all()]
 
 
+@router.get("/recent", response_model=list[SiteOut])
+async def recent_sites(
+    limit: int = Query(10, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+):
+    """Most recently scanned sites."""
+    query = (
+        select(Site)
+        .where(Site.tech_count > 0)
+        .order_by(Site.last_scanned_at.desc())
+        .limit(limit)
+    )
+    result = await db.execute(query)
+    return [SiteOut.model_validate(s) for s in result.scalars().all()]
+
+
 @router.get("/{domain}", response_model=SiteWithDetections)
 async def get_site(domain: str, db: AsyncSession = Depends(get_db)):
     """Get site detail with all detections."""
