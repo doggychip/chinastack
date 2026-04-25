@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -60,7 +60,7 @@ async def get_overview(db: AsyncSession = Depends(get_db)):
 
 @router.get("/top-technologies")
 async def get_top_technologies(
-    limit: int = 20,
+    limit: int = Query(20, ge=1, le=5000),
     db: AsyncSession = Depends(get_db),
 ):
     """Top N most common technologies across all scanned sites."""
