@@ -2,12 +2,13 @@
 __pycache__/
 *.pyc
 *.pyo
+.venv/
 .env
-*.db
 
 # Node
 node_modules/
 dist/
+.vite/
 
 # IDE
 .vscode/
@@ -16,3 +17,4 @@ dist/
 # OS
 .DS_Store
 .gstack/
+tsconfig.tsbuildinfo

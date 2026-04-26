@@ -3,10 +3,8 @@ services:
     build: ./backend
     ports:
       - "8000:8000"
-    volumes:
-      - db-data:/app
     environment:
-      - DATABASE_URL=sqlite+aiosqlite:///./chinastack.db
+      - BATTLE_BOTS=3
 
   frontend:
     build: ./frontend
@@ -14,6 +12,3 @@ services:
       - "3000:80"
     depends_on:
       - backend
-
-volumes:
-  db-data:

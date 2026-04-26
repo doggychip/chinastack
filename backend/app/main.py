@@ -1,63 +1,92 @@
-import asyncio
-import logging
+from __future__ import annotations
+
+import json
+import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import init_db
-from app.seed import seed_technologies, seed_sites
-from app.routers import lookup, sites, technologies, stats, export
+from .game import game
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(name)s %(levelname)s %(message)s",
-)
-logger = logging.getLogger("chinastack")
+DEFAULT_BOTS = int(os.environ.get("BATTLE_BOTS", "3"))
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup: init DB and seed technologies
-    await init_db()
-    await seed_technologies()
-    logger.info("Database initialized, technologies loaded")
-
-    # Run seed scan in background (don't block startup)
-    task = asyncio.create_task(seed_sites())
-
-    yield
-
-    # Shutdown
-    task.cancel()
+async def lifespan(_: FastAPI):
+    game.ensure_bots(DEFAULT_BOTS)
+    await game.start()
     try:
-        await task
-    except asyncio.CancelledError:
-        pass
+        yield
+    finally:
+        await game.stop()
 
 
-app = FastAPI(
-    title="ChinaStack",
-    description="Technology profiler for Chinese websites — 建站雷达",
-    version="0.1.0",
-    lifespan=lifespan,
-)
-
+app = FastAPI(title="AI Battle Game", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(lookup.router)
-app.include_router(sites.router)
-app.include_router(technologies.router)
-app.include_router(stats.router)
-app.include_router(export.router)
+
+@app.get("/health")
+async def health() -> dict:
+    return {
+        "ok": True,
+        "tick": game.tick,
+        "players": len(game.players),
+        "bots": len(game.bots),
+    }
 
 
-@app.get("/api/health")
-async def health():
-    return {"status": "ok", "service": "chinastack"}
+@app.get("/api/init")
+async def api_init() -> dict:
+    return game.init_payload()
+
+
+@app.websocket("/ws/spectator")
+async def ws_spectator(ws: WebSocket) -> None:
+    await ws.accept()
+
+    async def sink(msg: dict) -> None:
+        await ws.send_text(json.dumps(msg))
+
+    await sink(game.init_payload())
+    game.add_spectator(sink)
+    try:
+        while True:
+            await ws.receive_text()
+    except WebSocketDisconnect:
+        pass
+    finally:
+        game.remove_spectator(sink)
+
+
+@app.websocket("/ws/agent/{name}")
+async def ws_agent(ws: WebSocket, name: str) -> None:
+    await ws.accept()
+
+    async def sink(msg: dict) -> None:
+        await ws.send_text(json.dumps(msg))
+
+    player = game.add_player(name=name[:24] or "anon", sink=sink)
+    await sink(game.init_payload())
+    await sink({"type": "joined", "id": player.id, "name": player.name})
+
+    try:
+        while True:
+            raw = await ws.receive_text()
+            try:
+                msg = json.loads(raw)
+            except json.JSONDecodeError:
+                await sink({"type": "error", "message": "invalid JSON"})
+                continue
+            err = game.apply_command(player.id, msg)
+            if err is not None:
+                await sink(err)
+    except WebSocketDisconnect:
+        pass
+    finally:
+        game.remove_player(player.id)
