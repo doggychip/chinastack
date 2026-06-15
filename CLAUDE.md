@@ -1,10 +1,125 @@
-# ChinaStack — Build Spec
+# Alphawalk.ai Ad Scorer — Claude Code Project Memory
 
-## What This Is
+This file is auto-loaded at the start of every Claude Code session in this project. Keep it under 300 lines. Edit when the project's context shifts.
 
-ChinaStack is a technology profiler for Chinese websites. Input any .cn / .com.cn / Chinese domain, and it returns every technology detected on that site — frameworks, analytics, payment providers, CDNs, mini-program SDKs, hosting, and more.
+## What this project does
 
-This is a clone of BuiltWith.com ($14M ARR, one person) localized for the Chinese internet ecosystem, which BuiltWith barely covers.
+Automated rubric-based scoring of ad images for **Alphawalk.ai** (AI investment assistant for retail traders, target market: East Asia). The core loop:
 
-**Tech Stack**: FastAPI + SQLite + React + Vite + TypeScript + Tailwind CSS
-**Ports**: Backend 8000, Frontend 5173 (dev)
+```
+brand-dna.json (single source of truth)
+    ├──→ image generation prompts (positive constraints)
+    ├──→ scorer rubric (drift detection)
+    └──→ video shot list (when storyboard pipeline ships)
+              ↓
+       creatives generated
+              ↓
+       npm run score → SQLite
+              ↓
+       npm run keywords → feedback into next gen cycle
+```
+
+**Goal:** stop the "风格漂移→ 高CAC" feedback loop by locking visual DNA and measuring drift.
+
+## Stack conventions
+
+- **TypeScript only**, no frameworks. ES modules. `tsx` for execution.
+- **SQLite** via `better-sqlite3` for all persistence
+- **Anthropic SDK** for Claude vision calls (`claude-sonnet-4-6` default, `claude-opus-4-7` for high-stakes review, `claude-haiku-4-5-20251001` for cheap batch)
+- **Zeabur** for any deployment
+- No React/Vue/etc — keep it CLI + HTML reports
+
+## Key files
+
+- `brand-dna.json` — **locked visual identity spec.** Inject into every gen prompt and every scorer call. Lock period: 90 days. Do not edit during lock.
+- `brand-dna.md` — rationale companion for `brand-dna.json`. Read this before suggesting any DNA change.
+- `creative-feedback.md` — **auto-generated** from `data/scores.db` via `npm run feedback`. Soft preferences (KEEP/AVOID keywords + dimension trends) learned from the last 7 days. NOT hand-edited; it's a build artifact.
+- `src/rubric.ts` — the scorer's system prompt. The single most important tunable in the project.
+- `src/scorer.ts` — Claude vision API wrapper. Uses tool-use forced structured output: declares `SCORE_AD_TOOL` and pins responses via `tool_choice: { type: "tool", name: "score_ad" }`. The schema is the wire-level contract for every `ScoreResult` field. See `docs/audits/2026-05-13-tool-use-migration.md`.
+- `src/db.ts` — SQLite schema + keyword aggregation queries.
+- `data/scores.db` — historical scores. Don't delete; this is the learning corpus.
+
+## Two files govern the generator
+
+The prompt-engineer subagent reads two files when drafting prompts. They have different authorities:
+
+- **`brand-dna.json`** = locked rules. Hand-edited on a 90-day cadence. The generator must never violate it.
+- **`creative-feedback.md`** = learned preferences within those rules. Auto-regenerated via `npm run feedback`. The generator biases keyword choices toward KEEP and away from AVOID.
+
+If they conflict, **brand-dna wins**. Don't manually edit `creative-feedback.md` — fix the upstream (rubric, brief targeting, batch composition) instead. Don't let any agent edit `brand-dna.json` autonomously.
+
+## Hard rules (do NOT violate)
+
+1. **Never edit `brand-dna.json` without referencing `brand-dna.md` rationale.** Each field is a deliberate decision; explain why before changing.
+2. **Never bypass `brand-dna.json` injection** when generating image prompts. Drift starts here.
+3. **Never use `claude-3-*` model names** — they are deprecated. Always use `claude-sonnet-4-6` / `claude-opus-4-7` / `claude-haiku-4-5-20251001`.
+4. **Never store the API key in code** — only in `.env` (gitignored).
+5. **Never quote characters from existing IPs** in ad copy or image prompts (千早愛音, Genshin, Hololive, etc.). Auto-rejected by scorer.
+6. **Never use lists/bullets in actual ad copy headlines** — that's the PPT病 trigger. Headlines ≤ 8 words.
+
+## Common workflows
+
+### Daily loop (gen → score → feedback closes here)
+```bash
+# 1. Pull today's prompts (auto-learns from last 7 days of winners/losers/keywords)
+npm run next-prompts
+
+# 2. Copy prompts → Gemini Imagen / ChatGPT Image 2.0 → download → drop into:
+#    ./creatives/$(date +%Y-%m-%d)/
+
+# 3. Score (intake gate filters competitor mis-classifications, then N=3 multi-shot)
+npm run score ./creatives/$(date +%Y-%m-%d)/
+
+# 4. Regenerate creative-feedback.md (KEEP/AVOID digest the prompt-engineer reads)
+npm run feedback -- --archive
+# Or run /feedback in Claude Code for the diff-summary version.
+
+# 5. Read the report (today's results feed tomorrow's next-prompts)
+npm run report -- --filter-path=$(date +%Y-%m-%d)
+open ./reports/report-$(date +%Y-%m-%d).html
+
+# Optional cheap probe (single-shot, ~1/3 cost) when iterating mid-day:
+# npm run score ./creatives/$(date +%Y-%m-%d)/ -- --runs 1
+
+# Optional with a creative brief that constrains every prompt:
+# npm run next-prompts -- --n 5 --brief "lead with brand memorability hook"
+```
+
+### After a Meta/TikTok campaign closes (when CTR/CVR data comes in)
+Compare scorer ratings vs actual performance. Look for:
+- Dimensions where our rubric correlates with CTR (these dimensions are validated)
+- Dimensions where it doesn't (these need rubric revision)
+
+### Competitor benchmarking
+Drop competitor ads into `./competitors/{brand}/`, score with same rubric, compare dimension averages. Look for:
+- Where we systematically underperform vs winning competitors
+- What aesthetic patterns dominate in long-running competitor ads (= profitable patterns)
+
+## Failure modes to watch for
+
+- **PPT病** — keyword pipeline drifts toward "include all features" → scorer's `information_density` < 2 → reject
+- **Style drift** — daily images aesthetic varies → `brand_consistency` low across recent batch → time to remind the gen pipeline of brand-dna
+- **Local optima** — scorer rates highly but real CTR is poor → rubric overfits to design-school criteria, missing market signal → revise rubric weights based on performance data
+- **IP creep** — gen pipeline starts riffing on existing IPs because they're in training data → scorer's `ip_or_legal_risk` field catches it, but we should also catch in prompt-construction
+- **Rubric noise** — if a batch comes back `⚠️ unstable` (std > 2.0 across N runs), the rubric is making an unsteady judgment on this image. Don't trust the median; either rescore at `--runs 5` or accept that this image is borderline.
+- **Degraded 2-shot batches** — if you see batches saving with `2 runs` instead of `3 runs`, a transient API call failed mid-batch; the ≥2 threshold preserved the result but it has lower stability resolution. Re-run if stability matters.
+- **Competitor screenshots in alphawalk folder** — caught BEFORE Sonnet spend by the pre-scoring intake gate (Haiku classifier). If you see `⚠️ Classifier detected competitor brands ...`, move the flagged images to `creatives/benchmarks/competitor-monitoring/<brand>/<date>/` and re-run. Bypass with `--skip-classify` if the classifier's wrong.
+
+## What's NOT in this project (yet)
+
+- Performance correlation (CTR/CVR data join with scores) — planned, not built
+- Competitor benchmark mode — planned, not built
+- Storyboard / video shot list generation — planned, not built
+- Lark/Slack daily digest notifications — planned, not built
+
+## Subagents available
+
+- `ad-scorer` — scores a folder of images, summarizes winners/losers/IP risks
+- `prompt-engineer` — generates image generation prompts that comply with brand-dna.json
+
+Use them via `> Use the ad-scorer agent to ...` or `> Have prompt-engineer draft 5 ad concepts for ...`
+
+## Skills available
+
+- `score-today` — runs the daily scoring workflow end-to-end
+- `new-concept` — takes a creative brief, outputs brand-dna-compliant prompts ready for image generation
